@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdf-exporter-prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3001}
+    ports:
+      - "${PORT:-3001}:3001"
+    command: npm start
