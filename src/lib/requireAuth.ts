@@ -19,6 +19,7 @@ export const requireAuth =
     async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const token = req.cookies?.access_token;
+            console.log(req.cookies)
             if (!token) {
                 throw new UnauthorizedError("Unauthorized");
             }
