@@ -42,14 +42,8 @@ export class PdfService {
                 });
 
                 const url = PdfRoutes.note(input.noteId);
-                logger.info({ url }, "url constructed");
-
-                page.on("console", (msg) =>
-                    console.log(`[${msg.type()}] ${msg.text()}`),
-                );
 
                 await this.navigate(page, url);
-                logger.info("finished navigation");
 
                 if (input.signal?.aborted) {
                     throw new Error("Request aborted.");
@@ -124,12 +118,10 @@ export class PdfService {
     }
 
     private static async navigate(page: Page, url: string) {
-        console.log("inside navigate first");
         const response = await page.goto(url, {
             waitUntil: "networkidle0",
             timeout: 30000,
         });
-        console.log("inside navigate second");
 
         if (!response) {
             throw new Error("No response received");
@@ -142,6 +134,5 @@ export class PdfService {
         await page.waitForFunction(() => window.__PDF_READY__ === true, {
             timeout: 30_000,
         });
-        console.log("inside navigate last");
     }
 }

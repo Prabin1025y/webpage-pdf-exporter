@@ -18,8 +18,18 @@ export const requireAuth =
     (requiredRoles?: Role[]) =>
     async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const token = req.cookies?.access_token;
-            console.log(req.cookies)
+            const auth_header = req.header("Authorization");
+            if (!auth_header) {
+                throw new UnauthorizedError("No Authorization Token Header Found");
+            }
+            const splittedHeader = auth_header?.split(" ");
+
+            if (splittedHeader[0].trim() !== "Bearer") {
+                throw new UnauthorizedError("Invalid Token Type");
+            }
+
+            const token = splittedHeader[1].trim();
+
             if (!token) {
                 throw new UnauthorizedError("Unauthorized");
             }
@@ -63,7 +73,7 @@ export const requireAuth =
 
             next();
         } catch (error) {
-            console.log(error)
+            console.log(error);
             next(error);
         }
     };

@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
-import { authorizeNoteAccess } from "./lib/pdf/authorizeNoteAccess";
 import { PdfService } from "./lib/pdf/PdfService";
 import { ForbiddenError, UnauthorizedError } from "./lib/errors";
 import requireAuth, { AuthRequest } from "./lib/requireAuth";
@@ -35,7 +34,7 @@ app.post(
     requireAuth(),
     async (req: AuthRequest, res: Response) => {
         try {
-            const { noteId } = req.body;
+            const { noteId, noteTitle } = req.body;
 
             if (!noteId) {
                 return res.status(400).json({ message: "noteId is required" });
@@ -45,12 +44,11 @@ app.post(
 
             if (!user) throw new UnauthorizedError("Please log in first");
 
-            const note = await authorizeNoteAccess(user.id, noteId);
 
             const pdf = await PdfService.generateNote({
                 noteId,
                 userName: user.name,
-                noteTitle: note.title,
+                noteTitle,
                 userId: user.id,
                 signal: req.signal,
             });
@@ -60,7 +58,7 @@ app.post(
                 .contentType("application/pdf")
                 .set(
                     "Content-Disposition",
-                    `attachment; filename="${note.title}.pdf"`,
+                    `attachment; filename="${noteTitle}.pdf"`,
                 )
                 .send(Buffer.from(pdf));
         } catch (err) {
