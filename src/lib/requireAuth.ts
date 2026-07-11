@@ -1,14 +1,12 @@
 import { NextFunction, Request, Response } from "express";
-import { verifyToken } from "./auth-jwt";
+import { verifyInternalToken } from "./auth-jwt";
 import { ForbiddenError, UnauthorizedError } from "./errors";
-import { pool } from "./db";
 
 type Role = "USER" | "ADMIN";
 
 export interface AuthRequest extends Request {
     user?: {
         id: string;
-        email: string;
         name: string | null;
         role: Role;
     };
@@ -20,7 +18,9 @@ export const requireAuth =
         try {
             const auth_header = req.header("Authorization");
             if (!auth_header) {
-                throw new UnauthorizedError("No Authorization Token Header Found");
+                throw new UnauthorizedError(
+                    "No Authorization Token Header Found",
+                );
             }
             const splittedHeader = auth_header?.split(" ");
 
@@ -36,13 +36,15 @@ export const requireAuth =
 
             let payload: any;
             try {
-                payload = await verifyToken(token);
-            } catch (_) {
+                payload = await verifyInternalToken(token);
+            } catch (err) {
+                console.log(err)
                 throw new UnauthorizedError("Unauthorized");
             }
 
-            const userId = payload?.sub as string | undefined;
+            const userId = payload?.userId as string | undefined;
             const role = payload?.role as Role | undefined;
+            const userName = payload?.username as string | undefined;
 
             if (!userId || !role) {
                 throw new UnauthorizedError("Unauthorized");
@@ -52,24 +54,11 @@ export const requireAuth =
                 throw new ForbiddenError("Unauthorized");
             }
 
-            const result = await pool.query(
-                `
-                    SELECT id, email, role, name
-                    FROM "User"
-                    WHERE id = $1
-                `,
-                [userId],
-            );
-
-            const user = result.rows[0] || null;
-
-            console.log("user", user);
-
-            if (!user) {
-                throw new ForbiddenError("Forbidden");
-            }
-
-            req.user = user;
+            req.user = {
+                id: userId,
+                role,
+                name: userName || null,
+            };
 
             next();
         } catch (error) {

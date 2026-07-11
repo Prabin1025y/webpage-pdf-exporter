@@ -30,7 +30,7 @@ app.get("/", async (req: Request, res: Response) => {
 });
 
 app.post(
-    "/generate",
+    "/pdf",
     requireAuth(),
     async (req: AuthRequest, res: Response) => {
         try {

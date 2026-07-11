@@ -14,9 +14,9 @@ const AUDIENCE = "internal-pdf";
 
 export class PdfToken {
     static async create(payload: PdfPayload): Promise<string> {
-        const secret = process.env.PDF_TOKEN_SECRET;
+        const secret = process.env.JWT_INTERNAL_SECRET;
         if (!secret) {
-            throw new Error("Missing PDF_TOKEN_SECRET");
+            throw new Error("Missing JWT_INTERNAL_SECRET");
         }
         const SECRET = new TextEncoder().encode(secret);
         return await new SignJWT(payload)
@@ -31,9 +31,9 @@ export class PdfToken {
     }
 
     static async verify(token: string): Promise<PdfPayload> {
-        const secret = process.env.PDF_TOKEN_SECRET;
+        const secret = process.env.JWT_INTERNAL_SECRET;
         if (!secret) {
-            throw new Error("Missing PDF_TOKEN_SECRET");
+            throw new Error("Missing JWT_INTERNAL_SECRET");
         }
         const SECRET = new TextEncoder().encode(secret);
         const { payload } = await jwtVerify<PdfPayload>(token, SECRET, {
