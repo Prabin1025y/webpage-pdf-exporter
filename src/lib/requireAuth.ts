@@ -44,7 +44,7 @@ export const requireAuth =
 
             const userId = payload?.userId as string | undefined;
             const role = payload?.role as Role | undefined;
-            const userName = payload?.username as string | undefined;
+            const userName = payload?.userName as string | undefined;
 
             if (!userId || !role) {
                 throw new UnauthorizedError("Unauthorized");
