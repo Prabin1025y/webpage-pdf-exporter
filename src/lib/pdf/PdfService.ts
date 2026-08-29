@@ -112,7 +112,7 @@ export class PdfService {
                     `,
                 });
             }),
-            30_000,
+            60_000,
             "PDF generation timed out.",
         );
     }
