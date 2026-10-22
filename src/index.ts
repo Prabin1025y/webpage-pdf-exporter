@@ -34,7 +34,7 @@ app.post(
     requireAuth(),
     async (req: AuthRequest, res: Response) => {
         try {
-            const { noteId, noteTitle } = req.body;
+            const { noteId, noteTitle, folderName } = req.body;
 
             if (!noteId) {
                 return res.status(400).json({ message: "noteId is required" });
@@ -49,6 +49,7 @@ app.post(
                 noteId,
                 userName: user.name,
                 noteTitle,
+                folderName,
                 userId: user.id,
                 signal: req.signal,
             });

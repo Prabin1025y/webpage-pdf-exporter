@@ -11,17 +11,18 @@ type GenerateNotePdfInput = {
     userId: string;
     userName: string | null; // no longer shown in the PDF; kept so callers don't break
     noteTitle?: string;
+    folderName?: string;
     signal?: AbortSignal;
 };
 
-const SITE_URL = process.env.ETONNOTE_URL ?? "https://etonnote.com"; // <-- your real website
+const SITE_URL = process.env.ETONNOTE_URL ?? "https://etonnote.vercel.app/";
 
 // Page layout (mm)
-const MARGIN = { top: 25, bottom: 22, side: 20 };
+const MARGIN = { top: 10, bottom: 12, side: 10 };
 
 // Clickable area over "etonnote", in mm from the bottom-left of the page.
 // Nudge these if the link doesn't line up with the text.
-const LINK_BOX = { x1: 34, x2: 47, y1: 13, y2: 19 };
+const LINK_BOX = { x1: 19, x2: 32, y1: 7, y2: 13 };
 
 const HTML_ESCAPES: Record<string, string> = {
     "&": "&amp;",
@@ -36,24 +37,23 @@ const esc = (value: unknown): string =>
 
 const mmToPt = (mm: number) => (mm * 72) / 25.4;
 
-function buildHeaderTemplate(title: string): string {
+function buildHeaderTemplate(title: string, folderName: string): string {
     return `
         <style>html,body{margin:0;padding:0}</style>
         <div style="
             box-sizing:border-box;
-            height:${MARGIN.top}mm;
+            height:${MARGIN.top - 5}mm;
             width:calc(100% - ${MARGIN.side * 2}mm);
             margin:0 ${MARGIN.side}mm;
             display:flex;
             align-items:flex-end;
             justify-content:flex-end;
-            padding-bottom:4mm;
-            border-bottom:0.75pt solid #cfcfd6;
+            padding-bottom:2mm;
             font:9.5px Arial,Helvetica,sans-serif;
             color:#666;
             -webkit-print-color-adjust:exact;
         ">
-            ${esc(title)}
+            ${esc(title)}${esc(folderName) ? " | " + esc(folderName) : ""}
         </div>
     `;
 }
@@ -63,14 +63,13 @@ function buildFooterTemplate(): string {
         <style>html,body{margin:0;padding:0}</style>
         <div style="
             box-sizing:border-box;
-            height:${MARGIN.bottom}mm;
+            height:${MARGIN.bottom - 5}mm;
             width:calc(100% - ${MARGIN.side * 2}mm);
             margin:0 ${MARGIN.side}mm;
             display:flex;
             align-items:flex-start;
             justify-content:space-between;
-            padding-top:4mm;
-            border-top:0.75pt solid #cfcfd6;
+            padding-top:2mm;
             font:9.5px Arial,Helvetica,sans-serif;
             color:#666;
             -webkit-print-color-adjust:exact;
@@ -136,7 +135,8 @@ export class PdfService {
             userId: input.userId,
         });
 
-        const title = input.noteTitle || "Your Note";
+        const title = input.noteTitle || "";
+        const folderName = input.folderName || "";
 
         const rawPdf = await withTimeout(
             BrowserManager.withContext(async (context) => {
@@ -168,8 +168,9 @@ export class PdfService {
                         bottom: `${MARGIN.bottom}mm`,
                         left: `${MARGIN.side}mm`,
                     },
+                    scale: 0.8,
                     displayHeaderFooter: true,
-                    headerTemplate: buildHeaderTemplate(title),
+                    headerTemplate: buildHeaderTemplate(title, folderName),
                     footerTemplate: buildFooterTemplate(),
                 });
 
